@@ -1,36 +1,71 @@
 #import "../config.typ": template, tufted
-#show: template
+#show: template.with(
+  title: "如一｜人工智能安全与网络安全",
+  website-title: "如一 · 研究与笔记",
+  author: "如一",
+  description: "如一的个人主页。关注人工智能安全与网络安全，记录学习、研究与实践中的思考。",
+  website-url: "https://ruyi13.github.io/",
+  image-path: "/imgs/ruyi-ink-landscape.png",
+  css: ("/assets/custom.css", "/assets/home.css"),
+  header-links: (
+    "/": "首页",
+    "/Blog/": "笔记",
+    "https://github.com/ruyi13": "GitHub",
+  ),
+  header-elements: (
+    html.a(class: "home-brand", href: "/", [如一 #html.span[研究与笔记]]),
+  ),
+  footer-elements: (
+    [© 2026 如一 · #link("https://github.com/ruyi13")[ruyi13]],
+  ),
+)
 
-// tufted.margin-note 可以让你在边栏中放置内容
-// 宽大的边栏是 tufte 样式的特点，将注释放于其中并与正文并排，便于对照
-#tufted.margin-note({
-  image("imgs/tufted-duck-female-with-duckling.webp")
-  image("imgs/tufted-duck-male.webp")
-})
+#html.div(class: "ruyi-home", [
+  #html.div(class: "home-opening", [
+    #html.div(class: "home-intro", [
+      #html.p(class: "home-eyebrow", [人工智能安全 / 网络安全])
 
-#tufted.margin-note[
-  凤头潜鸭（学名 _Aythya fuligula_）是一种中型潜水鸭，原生于欧亚大陆。凭借卓越的潜水能力，它们能深入水下捕食猎物。
-]
-#tufted.margin-note[
-  The tufted duck (_Aythya fuligula_) is a medium-sized diving duck native to Eurasia. Known for its diving ability, it can plunge to great depths to forage for food.
-]
+      #html.h1[如一]
 
-= Tufted 博客模板
+      #html.p(class: "home-lead", [在复杂系统中，\ 寻找可信的边界。])
 
-这是一个基于 #link("https://typst.app/")[Typst] 和 #link("https://github.com/vsheg/tufted")[Tufted] 的静态网站构建模板，手把手教你搭建简洁、美观的个人博客、作品集和简历设计。
+      你好，我是如一。我的研究方向是人工智能安全与网络安全。这里用来记录学习中的问题、研究中的思考，以及动手实践的过程。
 
-#figure(caption: "网站示例")[#image("imgs/devices.webp")]
+      #html.p(class: "home-actions", [
+        #link("/Blog/")[阅读笔记 →]
+        #link("https://github.com/ruyi13")[访问 GitHub ↗]
+      ])
+    ])
+    #html.div(class: "home-art", [
+      #image("imgs/ruyi-ink-landscape.png", alt: "宣纸底色上的淡墨山水，远山与水面之间留有大片空白，细微连接点融入山线。")
+      #html.p(class: "home-art-caption", [山水有留白，思考有余地。])
+    ])
+  ])
 
-如果你通过访问本地地址（运行 `preview` 或其他本地服务）中看到了本页面，说明你已经成功安装了依赖、成功构建了网页、成功运行了预览。恭喜你！
+  #html.div(class: "home-research", [
+    #html.p(class: "home-section-label", [所思 · 研究方向])
+    #html.div(class: "home-research-grid", [
+      #html.div(class: "home-research-item", [
+        #html.p(class: "home-number", [01])
+        #html.h2[人工智能安全]
 
-想要使用这个模板编写你自己的网站，你需要学会使用 Typst。放心，非常好上手。
+        当模型能力不断增长，如何理解它的局限、评估它的风险，并让它在真实场景中可靠运行？我希望围绕这些问题，逐步积累理解与实践。
+      ])
+      #html.div(class: "home-research-item", [
+        #html.p(class: "home-number", [02])
+        #html.h2[网络安全]
 
-我在目前的网站中包含了尽可能多的 Typst 用例#footnote[例如文字、段落、分级标题、引用块、代码块、有序列表、无序列表、表格、图片、公式、链接、脚注、参考文献、嵌入 markdown 等。这块文字便是脚注，使用 `#footnote()` 函数编写。]，你可以在源代码中看到这些内容的 Typst 实现。我也包含了丰富的文档来帮助你编写页面和部署网站，你可以在 #link("/Docs/")[Docs] 页看到这些文档。
+        从系统、网络到应用，安全往往藏在具体的边界与细节中。我关注这些边界如何被建立、被检验，以及如何在持续变化的环境中得到维护。
+      ])
+    ])
+  ])
 
-== 🎨 样式特点
+  #html.div(class: "home-notebook", [
+    #html.p(class: "home-section-label", [所记 · 个人笔记])
+    #html.h2[把问题写下来，把理解留下来。]
 
-#link("https://edwardtufte.github.io/tufte-css/")[*Tufte 样式*] 源于数据可视化大师 Edward Tufte#footnote[爱德华·罗尔夫·塔夫特（生于1942年3月14日），常被称为“ET”，是美国统计学家，耶鲁大学政治学、统计学与计算机科学荣休教授。他因在信息设计领域的著述和作为数据可视化领域的先驱而闻名。] 的设计理念，主张“内容至上”与极简主义，力求去除一切干扰信息的视觉杂音。
+    学习与研究总会留下值得回看的片段：一个概念的来龙去脉，一次实验的观察，或一个暂时没有答案的问题。我想把它们整理在这里，让零散的思考慢慢连成线。
 
-#link("https://edwardtufte.github.io/tufte-css/")[*The Tufte style*] originates from the design philosophy of data visualization master _Edward Tufte_#footnote[Edward Rolf Tufte (/ˈtʌfti/; born March 14, 1942), sometimes known as "ET", is an American statistician and professor emeritus of political science, statistics, and computer science at Yale University. He is noted for his writings on information design and as a pioneer in the field of data visualization.], advocating for a "content-first" approach and minimalism while striving to eliminate all visual noise that distracts from the information.
-
-其最鲜明的特点是采用*宽大的侧边栏布局*，将注释、参考文献和图表直接并排展示在正文旁，取代了传统的脚注或尾注，配合优雅的*衬线字体*与*类纸张背景*，在数字屏幕上复刻了如经典学术著作般清晰、优雅、沉浸的深度阅读体验。
+    #html.p(class: "home-notebook-link", [#link("/Blog/")[前往笔记 →]])
+  ])
+])

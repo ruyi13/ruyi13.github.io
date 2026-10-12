@@ -148,6 +148,16 @@ To remove old output and rebuild everything, run `uv run build.py build --force`
 
 ### 3. Local Preview
 
+For automatic rebuilding and browser refresh, use one terminal:
+
+```bash
+python build.py watch
+```
+
+Open the printed `http://127.0.0.1:8000` URL. Saving any page, `.bib`, template, CSS, or image rebuilds the site and refreshes the browser. No second terminal or LiveReload installation is needed. Build errors appear in the terminal and trigger a browser notice; fix and save to retry. Stop with `Ctrl+C`. If the port is occupied, use `python build.py watch -p 8001`. Add `--no-open` to suppress opening the browser.
+
+The existing `preview` command below only serves previously generated output:
+
 > The HTTP server will occupy the current terminal window, so it's recommended to open a new terminal window in that path to run the preview command.
 >
 > 💡 **Quick workflow tip**: Build the website first, then run `uv run build.py preview` in one terminal and `uv run build.py build` in another terminal to compile your changes. `preview` only serves generated files; it does not watch or automatically compile `.typ` source files. With livereload, the page refreshes automatically when build output changes; with Python's built-in HTTP server, refresh the page manually. Neither requires restarting the server.

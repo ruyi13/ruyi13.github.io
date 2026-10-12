@@ -1,0 +1,200 @@
+/* Homepage only: ink, paper, celadon, and generous space. */
+body:has(.ruyi-home) {
+  max-width: 1180px;
+  width: 84%;
+  padding: 0;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+}
+
+body:has(.ruyi-home) > header:first-of-type {
+  margin: 3rem 0 1rem;
+}
+
+body:has(.ruyi-home) > header:has(.site-nav) {
+  margin: 0;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--theme-table-border);
+}
+
+.home-brand:any-link {
+  color: var(--theme-heading);
+  text-decoration: none;
+  background: none;
+  font-size: 1.65rem;
+  letter-spacing: 0.14em;
+}
+
+.home-brand span {
+  margin-left: 1.25rem;
+  color: var(--theme-text);
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  opacity: 0.65;
+}
+
+body:has(.ruyi-home) .site-nav a {
+  font-size: 1.05rem;
+  padding: 0.25em 0;
+  margin-right: 1.5rem;
+}
+
+body:has(.ruyi-home) > article {
+  padding: 4rem 0 0;
+}
+
+.ruyi-home {
+  --home-accent: #526c61;
+}
+
+html[data-theme="dark"] .ruyi-home {
+  --home-accent: #a7bcb0;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .ruyi-home {
+    --home-accent: #a7bcb0;
+  }
+}
+
+.ruyi-home p {
+  width: 100%;
+  font-size: 1.18rem;
+  line-height: 2;
+  text-align: left;
+}
+
+.home-opening {
+  display: grid;
+  grid-template-columns: 1fr 1.04fr;
+  align-items: center;
+  gap: 4rem;
+  padding: 0 0 4.5rem;
+}
+
+.ruyi-home .home-eyebrow,
+.ruyi-home .home-section-label {
+  margin: 0 0 1.5rem;
+  color: var(--home-accent);
+  font-size: 0.92rem;
+  letter-spacing: 0.18em;
+}
+
+.ruyi-home h1 {
+  font-size: clamp(3.8rem, 7vw, 6rem);
+  font-weight: 400;
+  margin: 0 0 1.6rem;
+  letter-spacing: 0.12em;
+}
+
+.ruyi-home .home-lead {
+  font-size: clamp(1.45rem, 2.5vw, 1.85rem);
+  line-height: 1.75;
+  margin-bottom: 1.5rem;
+}
+
+.ruyi-home .home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 2rem;
+  margin-top: 2rem;
+  font-size: 1.02rem;
+}
+
+.home-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+}
+
+.ruyi-home .home-art-caption {
+  margin: 1.2rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  letter-spacing: 0.2em;
+  opacity: 0.65;
+}
+
+.home-research,
+.home-notebook {
+  border-top: 1px solid var(--theme-table-border);
+  padding: 2.8rem 0 3.6rem;
+}
+
+.home-research-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+}
+
+.ruyi-home .home-number {
+  margin: 0 0 0.4rem;
+  color: var(--home-accent);
+  font-family: Georgia, serif;
+  font-size: 0.95rem;
+}
+
+.ruyi-home h2 {
+  margin: 0.3rem 0 1.2rem;
+  font-size: 1.65rem;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.home-notebook > p:not(.home-section-label) {
+  max-width: 46rem;
+}
+
+.ruyi-home a:any-link {
+  color: var(--home-accent);
+}
+
+.ruyi-home a:focus-visible,
+.home-brand:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+}
+
+body:has(.ruyi-home) > footer {
+  padding: 1.5rem 0 2.5rem;
+  border-top: 1px solid var(--theme-table-border);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 760px) {
+  body:has(.ruyi-home) {
+    width: 88%;
+  }
+
+  body:has(.ruyi-home) > header:first-of-type {
+    margin-top: 2rem;
+  }
+
+  body:has(.ruyi-home) > article {
+    padding-top: 2.8rem;
+  }
+
+  .home-opening,
+  .home-research-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .home-opening {
+    padding-bottom: 2.5rem;
+  }
+
+  .home-art {
+    max-width: 38rem;
+  }
+
+  .ruyi-home p {
+    font-size: 1.12rem;
+  }
+
+  .home-research,
+  .home-notebook {
+    padding: 2.2rem 0;
+  }
+}

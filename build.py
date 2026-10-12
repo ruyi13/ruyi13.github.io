@@ -19,6 +19,7 @@ Tufted Blog Template 构建脚本
     uv run build.py clean       # 清理生成的文件
     uv run build.py preview     # 启动本地预览服务器（默认端口 8000）
     uv run build.py preview -p 3000  # 使用自定义端口
+    uv run build.py watch       # 监听修改、自动构建并刷新浏览器
     uv run build.py --help      # 显示帮助信息
 
 增量编译选项:
@@ -34,6 +35,7 @@ Tufted Blog Template 构建脚本
 """
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -44,8 +46,10 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 # ============================================================================
 # 配置
@@ -770,6 +774,158 @@ def preview(port: int = 8000, open_browser_flag: bool = True) -> bool:
         return False
 
 
+def preview_source_snapshot() -> dict[Path, tuple[int, int]]:
+    """Track all local page, bibliography, template, and asset changes."""
+    snapshot = {}
+    paths = [CONFIG_FILE]
+    for directory in (CONTENT_DIR, ASSETS_DIR, Path("tufted-lib")):
+        paths.extend(directory.rglob("*"))
+    for path in paths:
+        try:
+            if path.is_file():
+                stat = path.stat()
+                snapshot[path] = (stat.st_mtime_ns, stat.st_size)
+        except FileNotFoundError:
+            pass  # Editors may briefly replace a file while saving.
+    return snapshot
+
+
+def watch(port: int = 8000, open_browser_flag: bool = True) -> bool:
+    """Build every page on source changes and serve browser reloads locally."""
+    import webbrowser
+
+    stop = threading.Event()
+    lock = threading.Lock()
+    state = {"revision": str(time.time_ns()), "error": False}
+    reload_script = """<script data-typst-live-preview>
+(() => {
+  const revision = "__REVISION__";
+  async function poll() {
+    try {
+      const response = await fetch('/__preview__/status', {cache: 'no-store'});
+      if (!response.ok) return;
+      const status = await response.json();
+      if (status.revision !== revision) { location.reload(); return; }
+      if (status.error && !document.getElementById('typst-preview-error')) {
+        const error = document.createElement('div');
+        error.id = 'typst-preview-error';
+        error.setAttribute('role', 'alert');
+        error.textContent = '编译失败：请查看终端中的错误。修正并保存后会自动重试。';
+        error.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:12px;background:#8b2828;color:white;font:14px/1.5 sans-serif';
+        document.body.appendChild(error);
+      }
+    } catch (_) { /* Retry when the local server becomes available again. */ }
+    finally { setTimeout(poll, 750); }
+  }
+  poll();
+})();
+</script>"""
+
+    class PreviewHandler(SimpleHTTPRequestHandler):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(SITE_DIR.resolve()), **kwargs)
+
+        def end_headers(self):
+            self.send_header("Cache-Control", "no-store")
+            super().end_headers()
+
+        def log_message(self, format, *args):
+            if len(args) < 2 or str(args[1]) != "200":
+                super().log_message(format, *args)
+
+        def serve_preview(self, head=False):
+            request_path = urlsplit(self.path).path
+            with lock:
+                status = dict(state)
+            if request_path == "/__preview__/status":
+                body = json.dumps(status).encode("utf-8")
+                content_type = "application/json"
+            else:
+                path = Path(self.translate_path(self.path))
+                if path.is_dir() and request_path.endswith("/"):
+                    path /= "index.html"
+                if not path.is_file() or path.suffix.lower() != ".html":
+                    return super().do_HEAD() if head else super().do_GET()
+                script = reload_script.replace("__REVISION__", status["revision"]).encode("utf-8")
+                body = path.read_bytes().replace(b"</body>", script + b"</body>", 1)
+                content_type = "text/html; charset=utf-8"
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            if not head:
+                self.wfile.write(body)
+
+        def do_GET(self):
+            self.serve_preview()
+
+        def do_HEAD(self):
+            self.serve_preview(head=True)
+
+    def refresh(changed=None):
+        results = []
+        # Recompile all pages so imports and shared .bib/image dependencies work,
+        # including dependencies outside the importing page's own directory.
+        if changed is None or any(not path.is_relative_to(ASSETS_DIR) for path in changed):
+            results.extend((build_html(force=True), build_pdf(force=True)))
+        if changed is None or any(path.is_relative_to(ASSETS_DIR) for path in changed):
+            results.append(copy_assets())
+        results.append(copy_content_assets(force=True))
+        return all(results)
+
+    def monitor(previous):
+        while not stop.wait(0.25):
+            current = preview_source_snapshot()
+            if current == previous:
+                continue
+            # Wait for a short quiet period to combine an editor's save events.
+            while not stop.wait(0.35):
+                latest = preview_source_snapshot()
+                if latest == current:
+                    break
+                current = latest
+            if stop.is_set():
+                return
+            changed = {path for path in previous.keys() | current.keys()
+                       if previous.get(path) != current.get(path)}
+            previous = current
+            print("\n检测到修改：" + ", ".join(str(path) for path in sorted(changed)), flush=True)
+            try:
+                success = refresh(changed)
+            except Exception as error:
+                print(f"❌ 构建失败：{error}", flush=True)
+                success = False
+            with lock:
+                state.update(revision=str(time.time_ns()), error=not success)
+            print("✅ 已更新，浏览器将自动刷新。" if success else "❌ 请修正编译错误后保存。", flush=True)
+
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", port), PreviewHandler)
+    except OSError as error:
+        print(f"❌ 无法启动端口 {port}：{error}\n请停止旧预览进程，或使用 watch -p 8001。")
+        return False
+
+    worker = None
+    try:
+        previous = preview_source_snapshot()
+        state["error"] = not refresh()
+        url = f"http://127.0.0.1:{server.server_port}"
+        print(f"\n实时预览：{url}\n监听所有页面、.bib、模板、CSS 和图片。保存后自动更新；Ctrl+C 停止。", flush=True)
+        worker = threading.Thread(target=monitor, args=(previous,), daemon=True)
+        worker.start()
+        if open_browser_flag:
+            webbrowser.open(url)
+        server.serve_forever(poll_interval=0.25)
+    except KeyboardInterrupt:
+        print("\n实时预览已停止。")
+    finally:
+        stop.set()
+        server.server_close()
+        if worker:
+            worker.join(timeout=5)
+    return True
+
+
 def parse_html_metadata(html_path: Path) -> dict[str, str]:
     """
     解析 HTML 文件并返回元数据解析器实例。
@@ -1252,6 +1408,11 @@ def create_parser() -> argparse.ArgumentParser:
     )
     preview_parser.set_defaults(open_browser=True)
 
+    watch_parser = subparsers.add_parser("watch", help="监听全部源文件，自动构建并刷新浏览器")
+    watch_parser.add_argument("-p", "--port", type=int, default=8000, help="服务器端口号（默认: 8000）")
+    watch_parser.add_argument("--no-open", action="store_false", dest="open_browser", help="不自动打开浏览器")
+    watch_parser.set_defaults(open_browser=True)
+
     return parser
 
 
@@ -1267,7 +1428,7 @@ if __name__ == "__main__":
     script_dir = Path(__file__).parent.absolute()
     os.chdir(script_dir)
 
-    if args.command in {"build", "html", "pdf"}:
+    if args.command in {"build", "html", "pdf", "watch"}:
         warn_if_typst_version_is_outdated()
 
     # 获取 force 参数
@@ -1287,6 +1448,8 @@ if __name__ == "__main__":
             success = clean()
         case "preview":
             success = preview(getattr(args, "port", 8000), getattr(args, "open_browser", True))
+        case "watch":
+            success = watch(args.port, args.open_browser)
         case _:
             print(f"❌ 未知命令: {args.command}")
             success = False
