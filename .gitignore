@@ -13,7 +13,8 @@ build/
 uv.lock
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/settings.json
 *.swp
 *.swo
 
@@ -21,7 +22,7 @@ uv.lock
 biome.json
 
 # build outputs
-_site/
+# _site/
 target/
 
 # temp files
