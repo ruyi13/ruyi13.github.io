@@ -22,7 +22,7 @@ uv.lock
 biome.json
 
 # build outputs
-# _site/
+_site/
 target/
 
 # temp files
